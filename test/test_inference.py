@@ -4,9 +4,10 @@ import unittest
 from unittest import TestCase
 
 import numpy as np
+import pandas as pd
 from dnutils import out
 
-from jpt import SymbolicVariable, JPT, NumericVariable, SymbolicType
+from jpt import SymbolicVariable, JPT, NumericVariable, infer_from_dataframe
 from jpt.base.intervals import ContinuousSet, RealSet, EXC, INC
 from jpt.distributions import Bool, Numeric
 from jpt.trees import MPEState, MPESolver
@@ -14,7 +15,6 @@ from jpt.variables import VariableMap, ValueAssignment
 
 
 class JPTInferenceSymbolic(unittest.TestCase):
-
     data = None
     jpt = None
 
@@ -74,8 +74,27 @@ class JPTInferenceNumeric(unittest.TestCase):
         self.assertAlmostEqual(r1, 1 - r2, places=10)
 
 
-class MPESolverTest(TestCase):
+class JPTInferenceInteger(unittest.TestCase):
 
+    def test_infer_integers_only(self):
+        '''Inference with Integer variables only'''
+        # Arrange
+        data = pd.DataFrame(np.array([list(range(-10, 10))]).T, columns=["X"])
+        variables = infer_from_dataframe(data, scale_numeric_types=False)
+        jpt = JPT(variables, min_samples_leaf=.1)
+        jpt.fit(data)
+        q = jpt.bind(X=[-1, 1])
+        # Act
+        result = jpt.infer(q)
+        # Assert
+        self.assertAlmostEqual(
+            .15,
+            result,
+            places=13
+        )
+
+
+class MPESolverTest(TestCase):
     GAUSSIAN = None
 
     @classmethod
