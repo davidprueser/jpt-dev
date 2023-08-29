@@ -16,7 +16,7 @@ from jpt.distributions.quantile.quantiles import QuantileDistribution
 import numpy as np
 from matplotlib import pyplot as plt
 
-from jpt.distributions import Gaussian
+from jpt.distributions.univariate.gaussian import Gaussian
 
 
 def qdata(data):

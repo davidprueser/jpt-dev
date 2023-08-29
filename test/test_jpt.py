@@ -21,7 +21,8 @@ import jpt.variables
 from jpt import SymbolicType
 from jpt.base.errors import Unsatisfiability
 from jpt.base.intervals import ContinuousSet
-from jpt.distributions import Gaussian, Numeric, Bool, IntegerType
+from jpt.distributions import Numeric, Bool, IntegerType
+from jpt.distributions.univariate.gaussian import Gaussian
 from jpt.trees import JPT
 from jpt.variables import NumericVariable, VariableMap, infer_from_dataframe, SymbolicVariable, LabelAssignment, \
     IntegerVariable

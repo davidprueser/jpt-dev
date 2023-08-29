@@ -24,8 +24,9 @@ finally:
     from jpt.base.intervals import ContinuousSet, EXC, INC, RealSet, R
 
 from jpt.base.errors import Unsatisfiability
-from jpt.distributions import SymbolicType, Multinomial, NumericType, Gaussian, Numeric, \
+from jpt.distributions import SymbolicType, Multinomial, NumericType, Numeric, \
     Distribution, ScaledNumeric
+from jpt.distributions.univariate.gaussian import Gaussian
 
 
 class MultinomialDistributionTest(TestCase):

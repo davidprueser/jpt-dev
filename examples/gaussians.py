@@ -8,7 +8,8 @@ from dnutils import out, first, ifnone
 from pandas import DataFrame
 
 from jpt.base.utils import format_path
-from jpt.distributions import Gaussian, Numeric, SymbolicType
+from jpt.distributions import Numeric, SymbolicType
+from jpt.distributions.univariate.gaussian import Gaussian
 from matplotlib import pyplot as plt
 
 from jpt.trees import JPT

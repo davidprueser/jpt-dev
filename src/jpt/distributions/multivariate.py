@@ -9,7 +9,7 @@ import numpy as np
 
 import matplotlib.pyplot as plt
 
-from .univariate import Gaussian
+from .univariate.gaussian import Gaussian
 
 try:
     from ..base.intervals import __module__
