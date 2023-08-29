@@ -1,5 +1,6 @@
+'''© Copyright 2021, Mareike Picklum, Daniel Nyga.'''
 import numbers
-from typing import Iterable, Any, Type
+from typing import Set, Iterable, Type, Any
 
 import numpy as np
 
@@ -16,6 +17,7 @@ DISCRETE = 'discrete'
 
 
 # ----------------------------------------------------------------------------------------------------------------------
+
 class Distribution:
     '''
     Abstract supertype of all domains and distributions
@@ -29,10 +31,7 @@ class Distribution:
     def __init__(self, **settings):
         # used for str and repr methods to be able to print actual type
         # of Distribution when created with jpt.variables.Variable
-        self._cl = f'{self.__class__.__name__}' \
-                   + (f' ({self.__class__.__mro__[1].__name__})'
-                      if self.__module__ != __name__
-                      else '')
+        self._cl = self.__class__.__qualname__
         self.settings = type(self).SETTINGS.copy()
         for attr in type(self).SETTINGS:
             try:
@@ -40,13 +39,22 @@ class Distribution:
             except AttributeError:
                 pass
             else:
-                raise AttributeError('Attribute ambiguity: Object of type "%s" '
-                                     'already has an attribute with name "%s"' % (type(self).__name__,
-                                                                                  attr))
+                raise AttributeError(
+                    'Attribute ambiguity: Object of type "%s" '
+                    'already has an attribute with name "%s"' % (
+                        type(self).__name__,
+                        attr
+                    )
+                )
         for attr, value in settings.items():
             if attr not in self.settings:
-                raise AttributeError('Unknown settings "%s": '
-                                     'expected one of {%s}' % (attr, setstr(type(self).SETTINGS)))
+                raise AttributeError(
+                    'Unknown settings "%s": '
+                    'expected one of {%s}' % (
+                        attr,
+                        setstr(type(self).SETTINGS)
+                    )
+                )
             self.settings[attr] = value
 
     def __getattr__(self, name):
@@ -96,16 +104,24 @@ class Distribution:
     def mpe(self):
         raise NotImplementedError()
 
-    def crop(self):
+    def crop(self, restriction: Set) -> 'Distribution':
         raise NotImplementedError()
 
-    def _crop(self):
+    def _crop(self, restriction: Set) -> 'Distribution':
         raise NotImplementedError()
 
-    def merge(self):
+    @staticmethod
+    def merge(
+            distributions: Iterable['Distribution'],
+            weights: Iterable[numbers.Real]
+    ) -> 'Distribution':
         raise NotImplementedError()
 
-    def update(self):
+    def update(
+            self,
+            dist: 'Distribution',
+            weight: float
+    ) -> 'Distribution':
         raise NotImplementedError()
 
     def moment(self, order=1, c=0):
@@ -139,6 +155,13 @@ class Distribution:
     def number_of_parameters(self) -> int:
         raise NotImplementedError()
 
+    @staticmethod
+    def jaccard_similarity(
+            d1: 'Distribution',
+            d2: 'Distribution'
+    ) -> float:
+        raise NotImplementedError()
+
     def plot(self, title=None, fname=None, directory='/tmp', pdf=False, view=False, **kwargs):
         '''Generates a plot of the distribution.
 
@@ -166,7 +189,7 @@ class Distribution:
         self.__dict__ = Distribution.from_json(state).__dict__
 
     @staticmethod
-    def from_json(data) -> Type:
+    def from_json(data) -> Type['Distribution']:
         from .numeric import Numeric, ScaledNumeric
         from .multinomial import Multinomial
         from .integer import Integer

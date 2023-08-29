@@ -3,10 +3,19 @@ import math
 import numbers
 
 import numpy as np
-from dnutils import out, ifnone, stop, first
+from dnutils import ifnone, first, out, stop
 from dnutils.stats import Gaussian as Gaussian_, _matshape
-from scipy.stats import multivariate_normal, norm
+from matplotlib import pyplot as plt
+from scipy.stats import norm, multivariate_normal
 
+from jpt.base.utils import save_plot
+
+
+# ----------------------------------------------------------------------------------------------------------------------
+# Gaussian distribution. This is somewhat deprecated as we use model-free
+# quantile distributions, but this code is used in testing to sample
+# from Gaussian distributions.
+# TODO: In order to keep the code consistent, this class should inherit from 'Distribution'
 
 class Gaussian(Gaussian_):
     """Extension of :class:`dnutils.stats.Gaussian`"""
@@ -116,20 +125,13 @@ class Gaussian(Gaussian_):
 
     @property
     def pdf(self):
-        try:
-            return multivariate_normal(self._mean, self._cov, allow_singular=True).pdf
-        except ValueError:
-            out(self._mean)
-            out(self._cov)
-            raise
+        return multivariate_normal(self._mean, self._cov, allow_singular=True).pdf
 
     def cdf(self, *x):
         return np.array(norm.cdf(x, loc=self._mean, scale=self._cov))[0, :]
 
     def eval(self, lower, upper):
-        return abs(
-            multivariate_normal(self._mean, self._cov).cdf(upper) - multivariate_normal(self._mean, self._cov).cdf(
-                lower))
+        return abs(multivariate_normal(self._mean, self._cov).cdf(upper) - multivariate_normal(self._mean, self._cov).cdf(lower))
 
     def copy(self):
         g = Gaussian()
@@ -203,13 +205,12 @@ class Gaussian(Gaussian_):
         self.samples += 1
         if sum_w_ and sum_w_sq_ != 1:
             for j in range(self.dim):
-                for k in range(j + 1):
+                for k in range(j+1):
                     if k in dims or j in dims:
                         self._cov[j][k] = (oldcov[j][k] * sum_w * (1 - sum_w_sq)
                                            + sum_w * oldmean[j] * oldmean[k]
                                            - sum_w_ * self._mean[j] * self._mean[k]
-                                           + w * (x[j] if j in dims else oldmean[j]) * (
-                                               x[k] if k in dims else oldmean[k])) / (sum_w_ * (1 - sum_w_sq_))
+                                           + w * (x[j] if j in dims else oldmean[j]) * (x[k] if k in dims else oldmean[k])) / (sum_w_ * (1 - sum_w_sq_))
                     else:  # No change in either of the dimensions,
                         self._cov[j][k] = oldcov[j][k] * sum_w * (1 - sum_w_sq) / (sum_w_ * (1 - sum_w_sq_))
                     self._cov[k][j] = self._cov[j][k]
@@ -223,10 +224,6 @@ class Gaussian(Gaussian_):
                         self._cov[:, j] = 0
         self._sum_w = sum_w_
         self._sum_w_sq = sum_w_sq_
-        # self.pdf
-        if not self.sym():
-            out(f'oldmean {oldmean} oldcov\n{np.array(oldcov)}, introducing {x} as +1th example')
-            stop(f'newmean {self._mean} newcov\n{np.array(self._cov)}')
 
     def retract(self, x, w=1):
         """
@@ -277,6 +274,77 @@ class Gaussian(Gaussian_):
         for i in range(self.dim):
             for j in range(self.dim):
                 if self._cov[i][j] != self._cov[j][i]:
-                    out(i, j, self._cov[i][j], self._cov[j][i], self._cov[i][j] == self._cov[j][i])
                     return False
         return True
+
+    def plot(
+            self,
+            dim: int = 2,
+            title: str = None,
+            fname: str = None,
+            directory: str = '/tmp',
+            pdf: bool = False,
+            view: bool = False,
+            save: bool = False
+    ) -> None:
+        """
+
+        :param dim: if the distribution has a higher dimension than 1, the parameter `dim` allows to decide whether the
+        plot is a 2-dimensional heatmap or a 3-dimensional surface plot
+        :param title: the title of the plot
+        :param fname: the name of the file if the plot is saved
+        :param directory: the location of the file if the plot is stored
+        :param pdf: whether to save the file as a pdf, if False, the file is stored as png. Default is False
+        :param view: whether to show the generated plot
+        :param save: whether to save the plot to a file
+        :return:
+        """
+        fig, ax = plt.subplots(num=1, clear=True)
+
+        if self.dim == 1:
+            m = self.mean[0]
+            v = self.cov[0][0]
+            r = abs(2.5 * v)
+            X = np.linspace(m - r, m + r, int(m + r - (m - r)))
+            Z = np.array(self.pdf(X))
+
+            ax.plot(X, Z)
+            ax.set_xlabel('$x$')
+            ax.set_ylabel(r'$p(x|\mu,\sigma)$')
+        else:
+            cmap = 'BuPu'  # viridis, Blues, PuBu, 0rRd, BuPu
+
+            x = np.linspace(-2, 2, 30)
+            y = np.linspace(-2, 2, 30)
+            X, Y = np.meshgrid(x, y)
+
+            xy = np.column_stack([X.flat, Y.flat])
+            Z = self.pdf(xy)
+            Z = Z.reshape(X.shape)
+
+            if dim == 2:
+                # generate heatmap
+                c = ax.pcolormesh(X, Y, Z, cmap=cmap)
+
+                # setting the limits of the plot to the limits of the data
+                # ax.axis([xmin, xmax, ymin, ymax])
+                fig.colorbar(c, ax=ax)
+
+                ax.set_xlabel('$x$')
+                ax.set_ylabel(r'$p(x|\mu,\sigma)$')
+            else:
+                # generate 3d-surface plot
+                ax = plt.axes(projection='3d')
+                ax.plot_surface(X, Y, Z, cmap=cmap, edgecolor='none')
+
+                ax.set_xlabel('$x$')
+                ax.set_ylabel('$y$')
+                ax.set_zlabel(r'$p(x|\mu,\sigma)$')
+
+        plt.title(title or 'Gaussian Distribution:\n$\mu=$' + str(self._mean) + ',\n$\sigma=$' + str(self._cov))
+
+        if save:
+            save_plot(fig, directory, fname or self.__class__.__name__, fmt='pdf' if pdf else 'svg')
+
+        if view:
+            plt.show()
