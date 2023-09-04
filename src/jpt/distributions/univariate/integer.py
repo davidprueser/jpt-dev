@@ -280,7 +280,7 @@ class Integer(Distribution):
     mode = mpe
     _mode = _mpe
 
-    def k_mpe(self, k: Optional[int] = None) -> List[Tuple[float, Set[int]]]:
+    def k_mpe(self, k: Optional[int] = None) -> List[Tuple[Set[int], float]]:
         """
         Calculate the ``k`` most probable explanation states.
         :param k: The number of solutions to generate, defaults to the maximum possible number.
@@ -294,12 +294,12 @@ class Integer(Distribution):
         result = []
 
         for likelihood in sorted_likelihood:
-            result.append((likelihood, set([label for label, p in zip(self.labels.values(), self.probabilities) if
-                                            p == likelihood])))
+            result.append((set([label for label, p in zip(self.labels.values(), self.probabilities) if
+                                            p == likelihood]), likelihood))
 
         return result
 
-    def _k_mpe(self, k: int) -> List[Tuple[float, Set[int]]]:
+    def _k_mpe(self, k: int) -> List[Tuple[Set[int], float]]:
         """
         Calculate the ``k`` most probable explanation states.
         :param k: The number of solutions to generate
@@ -309,8 +309,8 @@ class Integer(Distribution):
         result = []
 
         for likelihood in sorted_likelihood:
-            result.append((likelihood, set([value for value, p in zip(self.values.values(), self.probabilities) if
-                                            p == likelihood])))
+            result.append((set([value for value, p in zip(self.values.values(), self.probabilities) if
+                                            p == likelihood]), likelihood))
 
         return result
 

@@ -1263,7 +1263,7 @@ class JPT:
             evidence: Union[Dict[Union[Variable, str], Any], VariableAssignment] = None,
             fail_on_unsatisfiability: bool = True,
             k: int = 0
-    ) -> Iterator[Tuple[float, LabelAssignment]] or None:
+    ) -> Iterator[Tuple[LabelAssignment, float]] or None:
         """
         Perform a k-MPE inference on this JPT under the given evidence.
 
@@ -1289,7 +1289,7 @@ class JPT:
         for leaf in conditional_jpt.leaves.values():
             for var, dist in leaf.distributions.items():
                 if isinstance(dist, Numeric):
-                    likelihood_max, _ = dist.mpe()
+                    _, likelihood_max = dist.mpe()
                     likelihoods.append(likelihood_max)
         mpe_solvers = [
             MPESolver(
@@ -2578,7 +2578,7 @@ class MPESolver:
 
     This algorithm iteratively constructs all ``k`` most probable explanations
     in descending order by performing a branch-and-bound search in the space of
-    atomic areas of the respective distributions. In constrast to classic BnB search,
+    atomic areas of the respective distributions. In contrast to classic BnB search,
     we do not throw away the pruned states but save them in a priority queue, where
     we can continue the search for the subsequent 2nd, 3rd, ..., k-th best solution.
     '''
@@ -2604,7 +2604,7 @@ class MPESolver:
             self.domains[var] = [state for _, state in k_mpe]
 
             if isinstance(dist, Numeric):
-                likelihood_max, _ = dist.mpe()
+                _, likelihood_max = dist.mpe()
                 likelihoods.append(likelihood_max)
 
             self.constraints[var] = OrderedDict(
@@ -2613,7 +2613,7 @@ class MPESolver:
                         state if isinstance(dist, Numeric) else frozenset(state),
                         likelihood
                     )
-                    for idx, (likelihood, state) in enumerate(k_mpe)],
+                    for idx, (state, likelihood) in enumerate(k_mpe)],
                     key=itemgetter(1)
                 )
             )

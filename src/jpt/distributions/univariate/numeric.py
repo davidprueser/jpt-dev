@@ -199,7 +199,7 @@ class Numeric(Distribution):
             ), _max
         )
 
-    def k_mpe(self, k: Optional[int] = None) -> List[Tuple[float, RealSet]]:
+    def k_mpe(self, k: Optional[int] = None) -> List[Tuple[RealSet, float]]:
         """
         Calculate the ``k`` most probable explanation states.
         :param k: The number of solutions to generate, defaults to the maximum possible number.
@@ -212,11 +212,11 @@ class Numeric(Distribution):
         result = []
 
         for likelihood in sorted_likelihood:
-            result.append((likelihood, RealSet([
+            result.append((RealSet([
                 interval
                 for interval, function in zip(self.pdf.intervals, self.pdf.functions)
                 if function.value == likelihood
-            ])))
+            ]), likelihood))
 
         return result
 

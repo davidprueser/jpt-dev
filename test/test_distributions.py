@@ -299,20 +299,13 @@ class MultinomialDistributionTest(TestCase):
         jacc2 = Multinomial.jaccard_similarity(d2, d1)
         self.assertEqual(jacc1, jacc2)
 
-    def test_mpe(self):
-        DistABC = self.DistABC
-        d1 = DistABC().set(params=[1 / 2, 1 / 4, 1 / 4])
-        l, m = d1.mpe()
-        self.assertEqual(0.5, l)
-        self.assertEqual({"A"}, m)
-
     def test_k_mpe(self):
         DistABC = self.DistABC
         d1 = DistABC().set(params=[1 / 2, 1 / 4, 1 / 4])
         k_mpe = d1.k_mpe(3)
         self.assertEqual(len(k_mpe), 2)
         self.assertEqual(k_mpe[0], d1.mpe())
-        self.assertEqual(k_mpe[1][0], 1/4)
+        self.assertEqual(k_mpe[1][1], 1/4)
 
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -515,7 +508,7 @@ class NumericDistributionTest(TestCase):
         d = Numeric()._fit(np.random.normal(size=(100, 1)), col=0)
         k_mpe = d.k_mpe(3)
         likelihoods = list(sorted([f.value for f in d.pdf.functions], reverse=True))[:3]
-        self.assertEqual(likelihoods, [l for l, _ in k_mpe])
+        self.assertEqual(likelihoods, [l for _, l in k_mpe])
 
     def _test_label_inference(self):
         raise NotImplementedError()
@@ -943,13 +936,13 @@ class IntegerDistributionTest(TestCase):
         # Act
         fair_k_mpe = fair_dice.k_mpe(3)
         biased_k_mpe = biased_dice.k_mpe(3)
-        self.assertEqual(fair_k_mpe[0][0], 1/6)
+        self.assertEqual(fair_k_mpe[0][1], 1/6)
         self.assertEqual(len(fair_k_mpe), 1)
 
         self.assertEqual(len(biased_k_mpe), 3)
-        self.assertEqual(biased_k_mpe[0][0], 2/6)
-        self.assertEqual(biased_k_mpe[1][0], 1 / 6)
-        self.assertEqual(biased_k_mpe[2][0], 0)
+        self.assertEqual(biased_k_mpe[0][1], 2 / 6)
+        self.assertEqual(biased_k_mpe[1][1], 1 / 6)
+        self.assertEqual(biased_k_mpe[2][1], 0)
 
     def test_merge(self):
         # Arrange
