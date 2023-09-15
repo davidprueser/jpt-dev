@@ -116,7 +116,6 @@ class JPTTest(TestCase):
         self.assertRaises(ValueError, jpt_._check_variable_assignment, assignx)
         self.assertRaises(ValueError, jpt._check_variable_assignment, assigny)
 
-
     def test_serialization_integer(self):
         '''(de)serialization of JPTs with training'''
         data = pd.DataFrame(np.array([list(range(-10, 10))]).T, columns=["X"])
@@ -247,7 +246,9 @@ class JPTTest(TestCase):
             "Drugs": ContinuousSet(30, 40)
         }
         p = jpt.reverse(q)
-        expres = [(17.035751235106073, 34), (16.854094288878343, 59), (16.792804125698865, 58), (16.789359254673656, 60), (16.73021346469622, 50), (16.640170414346798, 16), (16.526547303271443, 53), (16.407173212401243, 44)]
+        expres = [(17.035751235106073, 34), (16.854094288878343, 59), (16.792804125698865, 58),
+                  (16.789359254673656, 60), (16.73021346469622, 50), (16.640170414346798, 16), (16.526547303271443, 53),
+                  (16.407173212401243, 44)]
         self.assertEqual(expres, [(sum(c.values()), l.idx) for c, l in p])
 
     @unittest.skip
@@ -1168,7 +1169,7 @@ class KMPELeafTest(TestCase):
         leaf = next(iter(self.model.leaves.values()))
 
         # calculate likelihood wise unique solutions
-        k_mpes = [[l for l, _ in dist.k_mpe(dist.number_of_parameters())] for dist in leaf.distributions.values()]
+        k_mpes = [[l for _, l in dist.k_mpe(dist.number_of_parameters())] for dist in leaf.distributions.values()]
         combined_likelihoods = set(prod(e) for e in itertools.product(*k_mpes))
 
         k_mpe = list(self.model.kmpe(k=len(combined_likelihoods) + 1000))

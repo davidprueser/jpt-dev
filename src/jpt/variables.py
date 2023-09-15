@@ -602,7 +602,7 @@ class VariableMap:
     def __eq__(self, o: 'VariableMap'):
         return (
             type(o) is type(self) and
-            set(self._map.items()) == set(o._map.items()) and
+            list(self._map.items()) == list(o._map.items()) and
             list(self._variables.items()) == list(o._variables.items())
         )
 

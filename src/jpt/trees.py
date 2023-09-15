@@ -1310,7 +1310,7 @@ class JPT:
                                      for variable, value in solution.items()])
             # if isinstance(evidence, LabelAssignment):
             # values = values.label_assignment()
-            yield np.exp(-cost), values
+            yield values, (np.exp(-cost))
             try:
                 mpe_candidates.push((*next(solver), solver))
             except StopIteration:
@@ -2601,7 +2601,7 @@ class MPESolver:
         # fill domains and constraints
         for var, dist in self.distributions.items():
             k_mpe = dist.k_mpe()
-            self.domains[var] = [state for _, state in k_mpe]
+            self.domains[var] = [state for state, _ in k_mpe]
 
             if isinstance(dist, Numeric):
                 _, likelihood_max = dist.mpe()
